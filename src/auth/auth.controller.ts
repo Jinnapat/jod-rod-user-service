@@ -30,6 +30,7 @@ export class AuthController {
 
   @Post('reset_password')
   resetPasswordHandler(@Req() request, @Body('password') password) {
-    this.usersService.updateUser(request['user']['sub'], undefined, password);
+    const userId = request['user']['sub'];
+    this.usersService.updateUser(userId, undefined, password);
   }
 }

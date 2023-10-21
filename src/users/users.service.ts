@@ -26,9 +26,7 @@ export class UsersService {
   }
 
   async createUser(email: string, username: string, password: string) {
-    console.log(password);
     const passwordHash = await this.createPasswordHash(password);
-    console.log(passwordHash);
     const client = await this.pool.connect();
     await client.query(
       'INSERT INTO users (email, username, password_hash) VALUES ($1, $2, $3)',
@@ -49,20 +47,19 @@ export class UsersService {
   }
 
   async updateUser(userId: number, username?: string, password?: string) {
-    let query = '';
     if (username) {
-      query += 'username = $1';
+      await this.updateAtLeastOne(
+        'UPDATE users SET username = $1 WHERE id = $2',
+        [username, userId],
+      );
     }
     if (password) {
-      query += 'password = $2';
+      const passwordHash = await this.createPasswordHash(password);
+      await this.updateAtLeastOne(
+        'UPDATE users SET password_hash = $1 WHERE id = $2',
+        [passwordHash, userId],
+      );
     }
-    const client = await this.pool.connect();
-    const res = await client.query(
-      'UPDATE users SET ' + query + ' WHERE id = $3',
-      [username, password, userId],
-    );
-    client.release();
-    if (res.rows.length == 0) throw new NotFoundException('No user found');
   }
 
   private async createPasswordHash(password: string) {
@@ -70,6 +67,13 @@ export class UsersService {
       password,
       parseInt(this.configService.get('PASSWORD_SALT')),
     );
+  }
+
+  private async updateAtLeastOne(query, param) {
+    const client = await this.pool.connect();
+    const res = await client.query(query, param);
+    client.release();
+    if (res.rowCount == 0) throw new NotFoundException('No user found');
   }
 
   private async getAtLeastOne(
