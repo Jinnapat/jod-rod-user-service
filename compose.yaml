@@ -1,0 +1,7 @@
+services:
+  postgres:
+    build: ./postgres
+    environment:
+      - POSTGRES_PASSWORD=12345678
+    ports:
+      - 5432:5432
