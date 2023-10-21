@@ -11,7 +11,7 @@ export class UsersController {
     return this.usersService.getUserById(userId);
   }
 
-  @Post('updateProfile')
+  @Post('update_profile')
   updateProfileHandler(
     @Req() request,
     @Body('username') username,
