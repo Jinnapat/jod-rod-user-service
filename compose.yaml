@@ -1,7 +1,13 @@
 services:
+  api:
+    build: .
+    environment:
+      - PASSWORD_SALT=12
+      - POSTGRES_PASS=12345678
+      - PGHOST=postgres
+    ports:
+      - 3000:3000
   postgres:
     build: ./postgres
     environment:
       - POSTGRES_PASSWORD=12345678
-    ports:
-      - 5432:5432
