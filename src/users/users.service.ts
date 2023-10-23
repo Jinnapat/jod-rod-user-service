@@ -4,7 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 
 export type User = {
-  id: string;
+  id: number;
   username: string;
   email: string;
   password_hash: string;
@@ -37,6 +37,13 @@ export class UsersService {
 
   async getUserById(id: number) {
     return await this.getAtLeastOne('SELECT * FROM users WHERE id = $1', id);
+  }
+
+  async getUserByEmail(email: string) {
+    return await this.getAtLeastOne(
+      'SELECT * FROM users WHERE email = $1',
+      email,
+    );
   }
 
   async getUserByUsername(username: string) {

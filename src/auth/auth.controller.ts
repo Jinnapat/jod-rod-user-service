@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
 import { SetMetadata } from '@nestjs/common';
@@ -30,8 +30,8 @@ export class AuthController {
 
   @Post('reset_password')
   @Public()
-  resetPasswordHandler(@Req() request, @Body('password') password) {
-    const userId = request['user']['sub'];
-    this.usersService.updateUser(userId, undefined, password);
+  async resetPasswordHandler(@Body('email') email, @Body('password') password) {
+    const user = await this.usersService.getUserByEmail(email);
+    this.usersService.updateUser(user.id, undefined, password);
   }
 }
