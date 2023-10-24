@@ -8,6 +8,8 @@ export type User = {
   username: string;
   email: string;
   password_hash: string;
+  is_penalized: boolean;
+  is_admin: boolean;
 };
 
 @Injectable()

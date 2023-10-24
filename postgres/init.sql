@@ -3,6 +3,7 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    is_penalized BOOLEAN NOT NULL DEFAULT FALSE,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 INSERT INTO users (email, username, password_hash, is_admin)

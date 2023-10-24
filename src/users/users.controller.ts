@@ -1,23 +1,30 @@
-import { Controller, Get, Post, Body, Req } from '@nestjs/common';
+import { Controller, Get, Patch, Body, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 
-@Controller('users')
+@Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('profile')
-  getProfileHandler(@Req() request) {
+  @Get('getProfile')
+  async getProfileHandler(@Req() request) {
     const userId = request['user']['sub'];
-    return this.usersService.getUserById(userId);
+    return await this.usersService.getUserById(userId);
   }
 
-  @Post('update_profile')
-  updateProfileHandler(
+  @Patch('editProfile')
+  async updateProfileHandler(
     @Req() request,
     @Body('username') username,
     @Body('password') password,
   ) {
     const userId = request['user']['sub'];
-    return this.usersService.updateUser(userId, username, password);
+    return await this.usersService.updateUser(userId, username, password);
+  }
+
+  @Get('getPenaltyStatus')
+  async getPenaltyStatusHandler(@Req() request) {
+    const userId = request['user']['sub'];
+    const user = await this.usersService.getUserById(userId);
+    return user.is_penalized;
   }
 }

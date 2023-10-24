@@ -5,7 +5,7 @@ import { SetMetadata } from '@nestjs/common';
 
 const Public = () => SetMetadata('isPublic', true);
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
@@ -28,7 +28,7 @@ export class AuthController {
     return this.usersService.createUser(email, username, password);
   }
 
-  @Post('reset_password')
+  @Post('resetPassword')
   @Public()
   async resetPasswordHandler(@Body('email') email, @Body('password') password) {
     const user = await this.usersService.getUserByEmail(email);
