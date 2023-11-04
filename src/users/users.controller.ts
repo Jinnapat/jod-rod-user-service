@@ -1,30 +1,43 @@
-import { Controller, Get, Patch, Body, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Body,
+  Headers,
+  Post,
+  Param,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get('getProfile')
-  async getProfileHandler(@Req() request) {
-    const userId = request['user']['sub'];
-    return await this.usersService.getUserById(userId);
+  async getProfileHandler(@Headers('Authorization') bearerToken) {
+    return await this.usersService.getUser(bearerToken);
   }
 
   @Patch('editProfile')
   async updateProfileHandler(
-    @Req() request,
+    @Headers('Authorization') bearerToken,
     @Body('username') username,
     @Body('password') password,
   ) {
-    const userId = request['user']['sub'];
-    return await this.usersService.updateUser(userId, username, password);
+    return await this.usersService.updateUser(bearerToken, username, password);
   }
 
   @Get('getPenaltyStatus')
-  async getPenaltyStatusHandler(@Req() request) {
-    const userId = request['user']['sub'];
-    const user = await this.usersService.getUserById(userId);
-    return user.is_penalized;
+  async getPenaltyStatusHandler(@Headers('Authorization') bearerToken) {
+    return await this.usersService.getPaneltyStatus(bearerToken);
+  }
+
+  @Post('addLateCount/:id')
+  async addLateCOuntHandler(@Param('id') userId) {
+    await this.usersService.addLateCount(userId);
   }
 }

@@ -5,6 +5,8 @@ services:
       - PASSWORD_SALT=12
       - POSTGRES_PASS=12345678
       - PGHOST=postgres
+      - MAX_LATE_COUNT=5
+      - BAN_DURATION_MS=2629746000
     ports:
       - 7000:3000
   postgres:

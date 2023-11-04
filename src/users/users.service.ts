@@ -1,14 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from '../auth/constants';
 
 export type User = {
   id: number;
   username: string;
   email: string;
   password_hash: string;
-  is_penalized: boolean;
+  late_count: number;
+  unban_date: number | null;
   is_admin: boolean;
 };
 
@@ -16,7 +23,10 @@ export type User = {
 export class UsersService {
   private pool: Pool;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private jwtService: JwtService,
+  ) {
     this.pool = new Pool({
       user: 'postgres',
       password: this.configService.get('POSTGRES_PASS'),
@@ -37,15 +47,25 @@ export class UsersService {
     client.release();
   }
 
-  async getUserById(id: number) {
-    return await this.getAtLeastOne('SELECT * FROM users WHERE id = $1', id);
+  async getUser(bearerToken: string) {
+    const userId = await this.getUserIdFromToken(bearerToken);
+    const getResult = await this.getAtLeastOne(
+      'SELECT * FROM users WHERE id = $1',
+      userId,
+    );
+    return {
+      id: getResult.id,
+      username: getResult.username,
+      email: getResult.email,
+    };
   }
 
-  async getUserByEmail(email: string) {
-    return await this.getAtLeastOne(
+  async getUserIdByEmail(email: string) {
+    const getResult = await this.getAtLeastOne(
       'SELECT * FROM users WHERE email = $1',
       email,
     );
+    return getResult.id;
   }
 
   async getUserByUsername(username: string) {
@@ -63,7 +83,8 @@ export class UsersService {
     }
   }
 
-  async updateUser(userId: number, username?: string, password?: string) {
+  async updateUser(bearerToken: string, username?: string, password?: string) {
+    const userId = await this.getUserIdFromToken(bearerToken);
     if (username) {
       await this.updateAtLeastOne(
         'UPDATE users SET username = $1 WHERE id = $2',
@@ -71,12 +92,50 @@ export class UsersService {
       );
     }
     if (password) {
-      const passwordHash = await this.createPasswordHash(password);
+      this.resetPassword(userId, password);
+    }
+  }
+
+  async resetPassword(userId: number, password: string) {
+    const passwordHash = await this.createPasswordHash(password);
+    await this.updateAtLeastOne(
+      'UPDATE users SET password_hash = $1 WHERE id = $2',
+      [passwordHash, userId],
+    );
+  }
+
+  async getPaneltyStatus(bearerToken: string) {
+    const userId = await this.getUserIdFromToken(bearerToken);
+    const user = await this.getAtLeastOne(
+      'SELECT * FROM users WHERE id = $1',
+      userId,
+    );
+    const LATE_LIMIT = parseInt(this.configService.get('MAX_LATE_COUNT'));
+    return {
+      status: user.late_count < LATE_LIMIT ? 'NORMAL' : 'PENALTY',
+      unBannedDate: user.unban_date,
+      leftQuota: LATE_LIMIT - user.late_count,
+    };
+  }
+
+  async addLateCount(userIdString: string) {
+    const userId = parseInt(userIdString);
+    const LATE_LIMIT = parseInt(this.configService.get('MAX_LATE_COUNT'));
+    const user = await this.getAtLeastOne(
+      'SELECT * FROM users WHERE id = $1',
+      userId,
+    );
+    if (user.late_count >= LATE_LIMIT) return;
+    if (user.late_count + 1 == LATE_LIMIT) {
       await this.updateAtLeastOne(
-        'UPDATE users SET password_hash = $1 WHERE id = $2',
-        [passwordHash, userId],
+        'UPDATE users SET unban_date = current_date + 30 WHERE id = $1',
+        [userId],
       );
     }
+    await this.updateAtLeastOne(
+      'UPDATE users SET late_count = $1 WHERE id = $2',
+      [user.late_count + 1, userId],
+    );
   }
 
   private async createPasswordHash(password: string) {
@@ -102,5 +161,19 @@ export class UsersService {
     client.release();
     if (res.rows.length == 0) throw new NotFoundException('No user found');
     return res.rows[0];
+  }
+
+  private async getUserIdFromToken(authorization: string) {
+    const [type, token] = authorization?.split(' ') ?? [];
+    const bearerToken = type === 'Bearer' ? token : undefined;
+    if (!bearerToken) throw new UnauthorizedException();
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: jwtConstants.secret,
+      });
+      return payload.sub;
+    } catch {
+      throw new UnauthorizedException();
+    }
   }
 }

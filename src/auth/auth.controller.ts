@@ -25,7 +25,7 @@ export class AuthController {
 
   @Post('resetPassword')
   async resetPasswordHandler(@Body('email') email, @Body('password') password) {
-    const user = await this.usersService.getUserByEmail(email);
-    this.usersService.updateUser(user.id, undefined, password);
+    const userId = await this.usersService.getUserIdByEmail(email);
+    this.usersService.resetPassword(userId, password);
   }
 }

@@ -3,7 +3,8 @@ CREATE TABLE users (
     email TEXT UNIQUE NOT NULL,
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    is_penalized BOOLEAN NOT NULL DEFAULT FALSE,
+    late_count INTEGER NOT NULL DEFAULT 0,
+    unban_date DATE DEFAULT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE
 );
 INSERT INTO users (email, username, password_hash, is_admin)
