@@ -6,7 +6,7 @@ services:
       - POSTGRES_PASS=12345678
       - PGHOST=postgres
     ports:
-      - 3000:3000
+      - 7000:3000
   postgres:
     build: ./postgres
     environment:
