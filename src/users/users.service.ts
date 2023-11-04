@@ -49,10 +49,18 @@ export class UsersService {
   }
 
   async getUserByUsername(username: string) {
-    return await this.getAtLeastOne(
-      'SELECT * FROM users WHERE username = $1',
-      username,
-    );
+    try {
+      return await this.getAtLeastOne(
+        'SELECT * FROM users WHERE username = $1',
+        username,
+      );
+    } catch (err) {
+      return {
+        id: '',
+        username: '',
+        password_hash: '',
+      };
+    }
   }
 
   async updateUser(userId: number, username?: string, password?: string) {
