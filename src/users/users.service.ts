@@ -83,6 +83,19 @@ export class UsersService {
     }
   }
 
+  async getUserById(userIdString: string) {
+    const userId = parseInt(userIdString);
+    const getResult = await this.getAtLeastOne(
+      'SELECT * FROM users WHERE id = $1',
+      userId,
+    );
+    return {
+      id: getResult.id,
+      username: getResult.username,
+      email: getResult.email,
+    };
+  }
+
   async updateUser(bearerToken: string, username?: string, password?: string) {
     const userId = await this.getUserIdFromToken(bearerToken);
     if (username) {
