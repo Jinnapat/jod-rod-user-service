@@ -8,7 +8,7 @@ services:
       - MAX_LATE_COUNT=5
       - BAN_DURATION_MS=2629746000
     ports:
-      - 7000:3000
+      - 7005:3000
   postgres:
     build: ./postgres
     environment:
