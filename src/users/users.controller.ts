@@ -42,7 +42,7 @@ export class UsersController {
   }
 
   @Post('addLateCount/:id')
-  async addLateCOuntHandler(@Param('id') userId) {
+  async addLateCountHandler(@Param('id') userId) {
     await this.usersService.addLateCount(userId);
   }
 }
