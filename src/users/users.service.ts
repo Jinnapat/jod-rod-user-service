@@ -117,8 +117,12 @@ export class UsersService {
     );
   }
 
-  async getPaneltyStatus(bearerToken: string) {
+  async getPenaltyStatus(bearerToken: string) {
     const userId = await this.getUserIdFromToken(bearerToken);
+    return this.getPenaltyStatusById(userId);
+  }
+
+  async getPenaltyStatusById(userId: number) {
     const user = await this.getAtLeastOne(
       'SELECT * FROM users WHERE id = $1',
       userId,

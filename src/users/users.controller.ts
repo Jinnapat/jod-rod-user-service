@@ -38,7 +38,12 @@ export class UsersController {
 
   @Get('getPenaltyStatus')
   async getPenaltyStatusHandler(@Headers('Authorization') bearerToken) {
-    return await this.usersService.getPaneltyStatus(bearerToken);
+    return await this.usersService.getPenaltyStatus(bearerToken);
+  }
+
+  @Get('getPenaltyStatus/:id')
+  async getPenaltyStatusByIdHandler(@Param('id') userId) {
+    return await this.usersService.getPenaltyStatusById(parseInt(userId));
   }
 
   @Post('addLateCount/:id')
